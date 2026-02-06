@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tech Lead Expert"
+  short_description: "Senior engineering guidance"
+  default_prompt: "Use $tech-lead-expert to plan and implement this work." 

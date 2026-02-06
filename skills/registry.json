@@ -1,0 +1,17 @@
+[
+  {
+    "name": "example-skill",
+    "description": "Starter skill showing the expected folder layout and SKILL.md format.",
+    "path": "skills/example-skill"
+  },
+  {
+    "name": "prd-writer",
+    "description": "Create detailed Product Requirements Documents (PRDs) in readme/ with a clear structure and creation timestamp.",
+    "path": "skills/prd-writer"
+  },
+  {
+    "name": "tech-lead-expert",
+    "description": "Senior technical software lead guidance for architecture, implementation, and end-to-end workflows with best practices.",
+    "path": "skills/tech-lead-expert"
+  }
+]

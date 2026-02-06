@@ -1,0 +1,4 @@
+interface:
+  display_name: "PRD Writer"
+  short_description: "Create structured PRDs in readme/"
+  default_prompt: "Use $prd-writer to draft a detailed PRD for this feature."
