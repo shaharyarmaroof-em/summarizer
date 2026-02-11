@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Summarizer v1",
+  "version": "0.1.0",
+  "description": "Minimal sidebar to process page text with Bedrock Nova.",
+  "minimum_chrome_version": "114",
+  "permissions": ["activeTab", "tabs", "sidePanel"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "Summarizer v1"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "src/extension/sidebar.html"
+  }
+}

@@ -36,6 +36,7 @@ A minimal Chrome extension that lets a user submit text (page content or manual 
   - Summarize
   - Extract key information
 - Must support synchronous response display (single request/response).
+- Results must be returned in Markdown format and rendered in the sidebar.
 
 ## Non-Functional Requirements
 
@@ -43,6 +44,7 @@ A minimal Chrome extension that lets a user submit text (page content or manual 
 - Stateless backend; no data persistence.
 - Secure API with basic auth or API key.
 - Minimal operational footprint.
+- Use shadcn/ui for consistent styling and rapid development.
 
 ## Architecture
 
@@ -102,6 +104,7 @@ Response:
 ```json
 {
   "result": "...",
+  "format": "markdown",
   "model": "nova",
   "latency_ms": 1234
 }
