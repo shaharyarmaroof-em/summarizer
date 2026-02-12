@@ -13,6 +13,7 @@ description: "Senior technical software lead guidance for frontend or backend wo
 4. Choose an approach aligned with best practices of the framework.
 5. Implement code with robustness, scalability, and testability in mind.
 6. Provide test strategy or add tests when appropriate.
+7. Make sure the build command runs and passes, and that code is linted and formatted.
 
 ## Expectations
 
@@ -31,6 +32,7 @@ description: "Senior technical software lead guidance for frontend or backend wo
 - NestJS: `references/nestjs.md`
 - Jest: `references/jest.md`
 - ESLint + TypeScript: `references/eslint-typescript.md`
+- SCSS: `references/scss.md`
 
 Load the relevant reference file(s) before making framework-specific decisions.
 

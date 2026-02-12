@@ -13,5 +13,15 @@
     "name": "tech-lead-expert",
     "description": "Senior technical software lead guidance for architecture, implementation, and end-to-end workflows with best practices.",
     "path": "skills/tech-lead-expert"
+  },
+  {
+    "name": "cloud-director-mentor",
+    "description": "Director-level cloud architecture mentor for AWS-first systems: executive clarity, risk/cost thinking, and scalable operating models.",
+    "path": "skills/cloud-director-mentor"
+  },
+  {
+    "name": "senior-ui-ux-designer",
+    "description": "Senior UI/UX designer capability for synthesizing requirements, designing comfortable and fluid UIs, and validating designs against best practices.",
+    "path": "skills/senior-ui-ux-designer"
   }
 ]
