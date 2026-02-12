@@ -3,13 +3,6 @@ import { createRoot } from "react-dom/client";
 import type { ExtensionResponse, JobStatus } from "./types";
 import "./styles.css";
 
-type AudioPayload = {
-  data: ArrayBuffer;
-  name: string;
-  type: string;
-  size: number;
-};
-
 const sendMessage = async (message: unknown): Promise<ExtensionResponse> => {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage(message, (response) => {
@@ -92,7 +85,6 @@ const App = () => {
   const [recordingStart, setRecordingStart] = useState<number | null>(null);
   const [recordingElapsed, setRecordingElapsed] = useState(0);
   const [lastSubmission, setLastSubmission] = useState<{
-    audio: AudioPayload;
     notes: string;
   } | null>(null);
 
@@ -305,6 +297,41 @@ const App = () => {
     setStatusMessage("Job cancelled (client-side)");
   };
 
+  const uploadAudio = async () => {
+    if (!audioFile) {
+      throw new Error("Missing audio file");
+    }
+    const contentType = audioFile.type || "audio/webm";
+    if (!contentType.startsWith("audio/")) {
+      throw new Error("Unsupported audio content type");
+    }
+
+    const uploadResponse = await sendMessage({
+      type: "GET_UPLOAD_URL",
+      filename: audioFile.name,
+      contentType,
+      size: audioFile.size
+    });
+
+    if (!uploadResponse.ok || !uploadResponse.uploadUrl || !uploadResponse.s3Key) {
+      throw new Error(uploadResponse.ok ? "Upload URL missing" : uploadResponse.error);
+    }
+
+    const uploadResult = await fetch(uploadResponse.uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": contentType
+      },
+      body: audioFile
+    });
+
+    if (!uploadResult.ok) {
+      throw new Error(`Upload failed: ${uploadResult.status}`);
+    }
+
+    return uploadResponse.s3Key;
+  };
+
   const handleStartJob = async () => {
     if (!audioFile || isRecording) return;
     if (notesTooLong) {
@@ -315,62 +342,69 @@ const App = () => {
 
     setErrorMessage(null);
     setResultMarkdown("");
-    setStatusMessage("Starting job...");
+    setStatusMessage("Uploading audio...");
+    try {
+      const s3Key = await uploadAudio();
+      setStatusMessage("Starting job...");
+      setLastSubmission({ notes: notes.trim() });
+      const response = await sendMessage({
+        type: "START_SUMMARY_JOB",
+        s3Key,
+        notes: notes.trim()
+      });
 
-    const audioPayload: AudioPayload = {
-      data: await audioFile.arrayBuffer(),
-      name: audioFile.name,
-      type: audioFile.type || "audio/webm",
-      size: audioFile.size
-    };
+      if (!response.ok) {
+        setErrorMessage(response.error);
+        setStatusMessage(response.error);
+        return;
+      }
 
-    setLastSubmission({ audio: audioPayload, notes: notes.trim() });
-
-    const response = await sendMessage({
-      type: "START_SUMMARY_JOB",
-      audio: audioPayload,
-      notes: notes.trim()
-    });
-
-    if (!response.ok) {
-      setErrorMessage(response.error);
-      setStatusMessage(response.error);
-      return;
+      setJobId(response.jobId ?? null);
+      if (response.status) {
+        setJobStatus(response.status);
+        setStatusMessage(statusLabels[response.status]);
+      } else {
+        setStatusMessage("Queued");
+      }
+      setShouldPoll(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      setErrorMessage(message);
+      setStatusMessage(message);
     }
-
-    setJobId(response.jobId ?? null);
-    if (response.status) {
-      setJobStatus(response.status);
-      setStatusMessage(statusLabels[response.status]);
-    } else {
-      setStatusMessage("Queued");
-    }
-    setShouldPoll(true);
   };
 
   const handleRetryJob = async () => {
-    if (!lastSubmission || isBusy) return;
+    if (!lastSubmission || isBusy || !audioFile) return;
     setErrorMessage(null);
     setResultMarkdown("");
-    setStatusMessage("Retrying job...");
-    const response = await sendMessage({
-      type: "START_SUMMARY_JOB",
-      audio: lastSubmission.audio,
-      notes: lastSubmission.notes
-    });
-    if (!response.ok) {
-      setErrorMessage(response.error);
-      setStatusMessage(response.error);
-      return;
+    setStatusMessage("Uploading audio...");
+    try {
+      const s3Key = await uploadAudio();
+      setStatusMessage("Retrying job...");
+      const response = await sendMessage({
+        type: "START_SUMMARY_JOB",
+        s3Key,
+        notes: lastSubmission.notes
+      });
+      if (!response.ok) {
+        setErrorMessage(response.error);
+        setStatusMessage(response.error);
+        return;
+      }
+      setJobId(response.jobId ?? null);
+      if (response.status) {
+        setJobStatus(response.status);
+        setStatusMessage(statusLabels[response.status]);
+      } else {
+        setStatusMessage("Queued");
+      }
+      setShouldPoll(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Retry failed";
+      setErrorMessage(message);
+      setStatusMessage(message);
     }
-    setJobId(response.jobId ?? null);
-    if (response.status) {
-      setJobStatus(response.status);
-      setStatusMessage(statusLabels[response.status]);
-    } else {
-      setStatusMessage("Queued");
-    }
-    setShouldPoll(true);
   };
 
   const progressValue = jobStatus ? statusProgress[jobStatus] : 0;
@@ -517,7 +551,7 @@ const App = () => {
           <button
             type="button"
             className="button secondary quiet"
-            disabled={!lastSubmission || isBusy}
+            disabled={!lastSubmission || isBusy || !audioFile}
             onClick={handleRetryJob}
           >
             Retry Last

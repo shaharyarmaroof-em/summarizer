@@ -1,5 +1,5 @@
 import type { ExtensionMessage, ExtensionResponse } from "./types";
-import { getSummaryJob, processText, startSummaryJob } from "./api";
+import { createUploadUrl, getSummaryJob, processText, startSummaryJob } from "./api";
 
 const getActiveTabId = async (): Promise<number | undefined> => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -47,10 +47,31 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       return;
     }
 
+    if (message.type === "GET_UPLOAD_URL") {
+      try {
+        const result = await createUploadUrl({
+          filename: message.filename,
+          contentType: message.contentType,
+          size: message.size
+        });
+        sendResponse({
+          ok: true,
+          uploadUrl: result.uploadUrl,
+          s3Key: result.s3Key
+        } satisfies ExtensionResponse);
+      } catch (error) {
+        sendResponse({
+          ok: false,
+          error: error instanceof Error ? error.message : "Unknown error"
+        } satisfies ExtensionResponse);
+      }
+      return;
+    }
+
     if (message.type === "START_SUMMARY_JOB") {
       try {
         const result = await startSummaryJob({
-          audio: message.audio,
+          s3Key: message.s3Key,
           notes: message.notes
         });
         sendResponse({

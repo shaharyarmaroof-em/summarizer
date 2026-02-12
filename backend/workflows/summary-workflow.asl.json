@@ -1,0 +1,10 @@
+{
+  "Comment": "Workflow is defined in CDK (infra/lib/summarizer-backend-stack.ts). This file is for reference only.",
+  "StartAt": "DefinedInCdk",
+  "States": {
+    "DefinedInCdk": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}

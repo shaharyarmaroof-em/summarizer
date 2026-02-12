@@ -21,6 +21,22 @@ export type SummaryJobStatus =
   | "SUCCEEDED"
   | "FAILED";
 
+export type CreateUploadUrlRequest = {
+  filename: string;
+  contentType: string;
+  size: number;
+};
+
+export type CreateUploadUrlResponse = {
+  uploadUrl: string;
+  s3Key: string;
+};
+
+export type StartSummaryJobRequest = {
+  s3Key: string;
+  notes: string;
+};
+
 export type StartSummaryJobResponse = {
   jobId: string;
   status: SummaryJobStatus;
