@@ -1,5 +1,5 @@
 import type { ExtensionMessage, ExtensionResponse } from "./types";
-import { processText } from "./api";
+import { getSummaryJob, processText, startSummaryJob } from "./api";
 
 const getActiveTabId = async (): Promise<number | undefined> => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -37,6 +37,44 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
           ok: true,
           result: result.result,
           latencyMs: result.latency_ms
+        } satisfies ExtensionResponse);
+      } catch (error) {
+        sendResponse({
+          ok: false,
+          error: error instanceof Error ? error.message : "Unknown error"
+        } satisfies ExtensionResponse);
+      }
+      return;
+    }
+
+    if (message.type === "START_SUMMARY_JOB") {
+      try {
+        const result = await startSummaryJob({
+          audio: message.audio,
+          notes: message.notes
+        });
+        sendResponse({
+          ok: true,
+          jobId: result.jobId,
+          status: result.status
+        } satisfies ExtensionResponse);
+      } catch (error) {
+        sendResponse({
+          ok: false,
+          error: error instanceof Error ? error.message : "Unknown error"
+        } satisfies ExtensionResponse);
+      }
+      return;
+    }
+
+    if (message.type === "GET_SUMMARY_JOB") {
+      try {
+        const result = await getSummaryJob(message.jobId);
+        sendResponse({
+          ok: true,
+          jobId: result.jobId,
+          status: result.status,
+          resultMarkdown: result.resultMarkdown
         } satisfies ExtensionResponse);
       } catch (error) {
         sendResponse({
